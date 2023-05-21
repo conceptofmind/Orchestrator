@@ -28,7 +28,7 @@ def extract_italic_content(s):
     return s
 
 # Load the data from your CSV file
-df = pd.read_csv('/home/henry/Orchestrator/facebook_politcal_ads_kaggle.csv')
+df = pd.read_csv('/Orchestrator/facebook_politcal_ads_kaggle.csv')
 
 # Apply the unidecode function to each message to replace any non-ASCII characters
 df['message'] = df['message'].apply(lambda x: unidecode(x))
@@ -81,5 +81,8 @@ df['message'] = df['message'].str.replace('</li>', '', regex=False)
 df['message'].replace('', pd.NA, inplace=True)  # Replace empty strings with NA
 df.dropna(subset=['message'], inplace=True)  # Drop rows where 'message' is NA
 
+# Rename 'message' column to 'text'
+df.rename(columns={'message': 'text'}, inplace=True)
+
 # Save the result back to a CSV file
-df.to_csv('facebook_politcal_ads_kaggle_filter_span3.csv', index=False)
+df.to_csv('facebook_politcal_ads_clean.csv', index=False)
