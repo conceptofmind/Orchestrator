@@ -32,7 +32,7 @@ def extract_italic_content(s):
 
 
 # Load the data from your CSV file
-df = pd.read_csv("/Orchestrator/facebook_politcal_ads_kaggle.csv")
+df = pd.read_csv("/home/henry/Orchestrator/facebook_politcal_ads_kaggle.csv")
 
 # Apply the unidecode function to each message to replace any non-ASCII characters
 df["message"] = df["message"].apply(lambda x: unidecode(x))
@@ -80,6 +80,9 @@ df["message"] = df["message"].str.replace("</ul>", "", regex=False)
 df["message"] = df["message"].apply(lambda x: re.sub("<li[^>]*>", "", x))
 df["message"] = df["message"].str.replace("</li>", "", regex=False)
 
+# Remove "<!-- react-mount-point-unstable -->"
+df['message'] = df['message'].str.replace('<!-- react-mount-point-unstable -->', '', regex=False)
+
 # After all your transformations, remove rows where 'message' is null or empty
 df["message"].replace("", pd.NA, inplace=True)  # Replace empty strings with NA
 df.dropna(subset=["message"], inplace=True)  # Drop rows where 'message' is NA
@@ -87,5 +90,13 @@ df.dropna(subset=["message"], inplace=True)  # Drop rows where 'message' is NA
 # Rename 'message' column to 'text'
 df.rename(columns={"message": "text"}, inplace=True)
 
+# Calculate the average length of the 'text' entries
+average_length = df['text'].apply(len).mean()
+print('Average length of examples:', average_length)
+
 # Save the result back to a CSV file
-df.to_csv("facebook_politcal_ads_clean.csv", index=False)
+# df.to_csv("facebook_politcal_ads_clean.csv", index=False)
+
+#Save the result back to a Parquet file
+df.to_parquet('facebook_politcal_ads_clean.parquet', index=False)
+
