@@ -90,6 +90,9 @@ df.dropna(subset=["message"], inplace=True)  # Drop rows where 'message' is NA
 # Rename 'message' column to 'text'
 df.rename(columns={"message": "text"}, inplace=True)
 
+# Remove exact string duplicates
+df.drop_duplicates(subset=['text'], keep='first', inplace=True)
+
 # Calculate the average length of the 'text' entries
 average_length = df['text'].apply(len).mean()
 print('Average length of examples:', average_length)
@@ -98,5 +101,5 @@ print('Average length of examples:', average_length)
 # df.to_csv("facebook_politcal_ads_clean.csv", index=False)
 
 #Save the result back to a Parquet file
-df.to_parquet('facebook_politcal_ads_clean.parquet', index=False)
+df.to_parquet('facebook_politcal_ads_clean_exact_dedup.parquet', index=False)
 
