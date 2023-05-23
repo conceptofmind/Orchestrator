@@ -1,32 +1,29 @@
 from sentence_transformers import SentenceTransformer
 from datasets import load_dataset
 import torch
+from tqdm import tqdm
 print(torch.__version__)
 
-# Load the dataset
-dataset = load_dataset("conceptofmind/facebook_ads_160k", split="train")
+if __name__ == '__main__':
+    # Load the dataset
+    dataset = load_dataset("conceptofmind/facebook_ads", split="train")
 
-# Save the original length
-original_length = len(dataset)
+    model = SentenceTransformer('sentence-transformers/sentence-t5-xxl')
 
-# Get the number of GPUs available
-num_gpus = torch.cuda.device_count()
+    sentences = dataset["text"]
 
-# Initialize SentenceTransformer models for each GPU
-models = [SentenceTransformer("sentence-transformers/sentence-t5-xxl").to(f'cuda:{i}') for i in range(num_gpus)]
+    #Start the multi-process pool on all available CUDA devices
+    pool = model.start_multi_process_pool()
 
-def embed_text(examples):
-    # Determine which GPU this batch will be sent to
-    gpu_id = torch.tensor(range(len(examples))).fmod_(num_gpus)
+    print("Start Embedding")
+    #embeddings = model.encode(sentences)
 
-    embeddings = []
-    for ex, id in zip(examples["text"], gpu_id):
-        # Get the embeddings for the text
-        embeddings.append(models[id].encode(ex).tolist())
+    #Compute the embeddings using the multi-process pool
+    embeddings = model.encode_multi_process(sentences, pool, batch_size=16)
+    print("Embeddings computed. Shape:", embeddings.shape)
 
-    return {"embeddings": embeddings}
+    print("Finished Embedding")
 
-dataset = dataset.map(embed_text, batched=True, batch_size=16)
+    embeddings_list = embeddings.tolist()
 
-# Compare the lengths
-assert original_length == len(dataset), "The datasets do not have the same length."
+    fdataset = dataset.add_column("embeddings", embeddings_list)
